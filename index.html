@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AURA Institute Management System</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0f7ff',
+                            100: '#e0effe',
+                            500: '#0284c7',
+                            600: '#0369a1',
+                            700: '#075985',
+                            900: '#0c4a6e'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .glass {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+        }
+        .dark .glass {
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(10px);
+        }
+        .card-flip {
+            perspective: 1000px;
+        }
+        .card-inner {
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+        }
+        .card-flip:hover .card-inner {
+            transform: rotateY(180deg);
+        }
+        .card-front, .card-back {
+            backface-visibility: hidden;
+        }
+        .card-back {
+            transform: rotateY(180deg);
+        }
+    </style>
+</head>
+<body class="bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 font-sans min-h-screen flex flex-col">
+
+    <!-- Top Navigation Header -->
+    <header class="sticky top-0 z-40 w-full border-b border-slate-200 dark:border-slate-800 glass">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-sky-500 to-indigo-600 flex items-center justify-center text-white font-bold text-xl shadow-lg">
+                    <i class="fa-solid me-0.5 fa-graduation-cap"></i>
+                </div>
+                <div>
+                    <span class="font-extrabold text-lg tracking-tight bg-gradient-to-r from-sky-600 to-indigo-600 bg-clip-text text-transparent">AURA TECH</span>
+                    <span class="text-xs block text-slate-500 dark:text-slate-400 font-semibold">Institute Management Portal</span>
+                </div>
+            </div>
+
+            <!-- Role Switcher & User Controls -->
+            <div class="flex items-center gap-3">
+                <div class="relative">
+                    <label for="roleSelector" class="sr-only">Switch Role</label>
+                    <select id="roleSelector" onchange="switchRole(this.value)" class="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-xs md:text-sm px-3 py-1.5 font-medium focus:ring-2 focus:ring-sky-500 outline-none">
+                        <option value="admin">Super Admin</option>
+                        <option value="faculty">Faculty</option>
+                        <option value="student" selected>Student</option>
+                        <option value="recruiter">Recruiter</option>
+                        <option value="accountant">Accountant</option>
+                    </select>
+                </div>
+
+                <button onclick="toggleDarkMode()" class="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300">
+                    <i class="fa-solid fa-moon dark:hidden"></i>
+                    <i class="fa-solid fa-sun hidden dark:inline"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main App Body -->
+    <div class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 grid grid-cols-1 md:grid-cols-12 gap-6">
+
+        <!-- Sidebar Navigation -->
+        <aside class="md:col-span-3 space-y-2">
+            <nav id="sidebarNav" class="space-y-1 bg-white dark:bg-slate-800/50 p-3 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                <!-- Dynamic Sidebar Menu will be rendered via JavaScript -->
+            </nav>
+
+            <div class="bg-gradient-to-br from-sky-500 to-indigo-600 rounded-2xl p-4 text-white shadow-lg text-xs space-y-2">
+                <div class="flex items-center gap-2 font-bold text-sm">
+                    <i class="fa-solid fa-shield-halved"></i> Security Status
+                </div>
+                <p class="opacity-90">RBAC Enabled. Currently authenticated under active campus session.</p>
+            </div>
+        </aside>
+
+        <!-- Dynamic Content Panel -->
+        <main id="mainContent" class="md:col-span-9 space-y-6">
+            <!-- Dynamic Dashboard Content injected by JavaScript -->
+        </main>
+    </div>
+
+    <footer class="border-t border-slate-200 dark:border-slate-800 py-4 text-center text-xs text-slate-500">
+        &copy; 2026 AURA Institute of Technology • Enterprise IMS System
+    </footer>
+
+    <!-- Main Logic Script -->
+    <script>
+        let currentRole = 'student';
+
+        const roleData = {
+            student: {
+                name: "Alex Vance",
+                id: "AURA-2026-CSE-042",
+                dept: "Computer Science & Engineering (AI/ML)",
+                metrics: [
+                    { label: "Current CGPA", val: "9.24", icon: "fa-award", color: "text-amber-500" },
+                    { label: "Attendance", val: "88%", icon: "fa-user-check", color: "text-emerald-500" },
+                    { label: "Registered Credits", val: "24", icon: "fa-book-bookmark", color: "text-sky-500" },
+                    { label: "Pending Fees", val: "$0.00", icon: "fa-circle-check", color: "text-indigo-500" }
+                ],
+                nav: [
+                    { id: "overview", label: "Dashboard Overview", icon: "fa-chart-pie" },
+                    { id: "idcard", label: "Digital ID Card", icon: "fa-id-card" },
+                    { id: "academics", label: "Curriculum & DAG Visualizer", icon: "fa-network-wired" },
+                    { id: "payments", label: "Fee Payments & Invoices", icon: "fa-credit-card" },
+                    { id: "placements", label: "Placement Drive Portal", icon: "fa-briefcase" }
+                ]
+            },
+            admin: {
+                name: "Dr. Sarah Jenkins",
+                id: "AURA-ADM-001",
+                dept: "System & Campus Operations",
+                metrics: [
+                    { label: "Total Students", val: "4,250", icon: "fa-users", color: "text-sky-500" },
+                    { label: "Faculty Count", val: "310", icon: "fa-user-tie", color: "text-indigo-500" },
+                    { label: "Fee Collections", val: "$2.4M", icon: "fa-wallet", color: "text-emerald-500" },
+                    { label: "Campus Load", val: "92%", icon: "fa-server", color: "text-amber-500" }
+                ],
+                nav: [
+                    { id: "overview", label: "System Analytics", icon: "fa-chart-line" },
+                    { id: "academics", label: "Curriculum & DAG Visualizer", icon: "fa-network-wired" },
+                    { id: "payments", label: "Financial Records", icon: "fa-file-invoice-dollar" },
+                    { id: "placements", label: "Placement Statistics", icon: "fa-building-user" }
+                ]
+            },
+            faculty: {
+                name: "Prof. Robert Lang",
+                id: "FAC-2024-889",
+                dept: "Dept. of Computer Science",
+                metrics: [
+                    { label: "Assigned Courses", val: "4", icon: "fa-book", color: "text-sky-500" },
+                    { label: "Total Students", val: "180", icon: "fa-graduation-cap", color: "text-indigo-500" },
+                    { label: "Pending Evaluations", val: "32", icon: "fa-pen-to-square", color: "text-amber-500" },
+                    { label: "Avg Class Attendance", val: "91%", icon: "fa-clipboard-user", color: "text-emerald-500" }
+                ],
+                nav: [
+                    { id: "overview", label: "Classroom Dashboard", icon: "fa-chalkboard-user" },
+                    { id: "academics", label: "Course DAG Inspector", icon: "fa-network-wired" },
+                    { id: "placements", label: "Student Recommendations", icon: "fa-user-check" }
+                ]
+            },
+            recruiter: {
+                name: "Tech Corp Recruiting",
+                id: "REC-2026-NVIDIA",
+                dept: "Global Talent Acquisition",
+                metrics: [
+                    { label: "Open Drives", val: "2", icon: "fa-briefcase", color: "text-sky-500" },
+                    { label: "Applicants", val: "340", icon: "fa-users-line", color: "text-indigo-500" },
+                    { label: "Shortlisted", val: "45", icon: "fa-user-check", color: "text-emerald-500" },
+                    { label: "Interviews Today", val: "8", icon: "fa-calendar-check", color: "text-amber-500" }
+                ],
+                nav: [
+                    { id: "overview", label: "Recruiter Dashboard", icon: "fa-building" },
+                    { id: "placements", label: "Applications & Scheduling", icon: "fa-clipboard-list" }
+                ]
+            },
+            accountant: {
+                name: "Financial Operations",
+                id: "FIN-OFFICE-02",
+                dept: "Accounts & Endowments",
+                metrics: [
+                    { label: "Term Revenue", val: "$1.8M", icon: "fa-money-bill-wave", color: "text-emerald-500" },
+                    { label: "Overdue Payments", val: "$45.2K", icon: "fa-circle-exclamation", color: "text-rose-500" },
+                    { label: "Scholarships Issued", val: "$120K", icon: "fa-hand-holding-dollar", color: "text-sky-500" },
+                    { label: "Pending Audit Log", val: "0", icon: "fa-shield-check", color: "text-indigo-500" }
+                ],
+                nav: [
+                    { id: "overview", label: "Accounts Overview", icon: "fa-vault" },
+                    { id: "payments", label: "Fee Management Engine", icon: "fa-receipt" }
+                ]
+            }
+        };
+
+        function toggleDarkMode() {
+            document.documentElement.classList.toggle('dark');
+        }
+
+        function switchRole(role) {
+            currentRole = role;
+            renderSidebar();
+            renderContent('overview');
+        }
+
+        function renderSidebar() {
+            const navContainer = document.getElementById('sidebarNav');
+            const data = roleData[currentRole];
+            navContainer.innerHTML = `
+                <div class="px-3 py-2 border-b border-slate-200 dark:border-slate-700 mb-2">
+                    <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Authenticated User</p>
+                    <p class="font-bold text-sm text-slate-800 dark:text-slate-100">${data.name}</p>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">${data.dept}</p>
+                </div>
+            ` + data.nav.map((item, idx) => `
+                <button onclick="renderContent('${item.id}')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs md:text-sm font-semibold transition hover:bg-slate-100 dark:hover:bg-slate-700/50 text-slate-700 dark:text-slate-200">
+                    <i class="fa-solid ${item.icon} w-5 text-sky-500"></i>
+                    ${item.label}
+                </button>
+            `).join('');
+        }
+
+        function renderContent(tabId) {
+            const main = document.getElementById('mainContent');
+            const data = roleData[currentRole];
+
+            if (tabId === 'overview') {
+                main.innerHTML = `
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        ${data.metrics.map(m => `
+                            <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-2">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs font-bold text-slate-400 uppercase">${m.label}</span>
+                                    <i class="fa-solid ${m.icon}${m.color} text-lg"></i>
+                                </div>
+                                <p class="text-2xl font-black text-slate-800 dark:text-slate-100">${m.val}</p>
+                            </div>
+                        `).join('')}
+                    </div>
+
+                    <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+                        <div class="flex items-center justify-between">
+                            <h3 class="font-bold text-lg text-slate-800 dark:text-slate-100">Performance & Analytics Summary</h3>
+                            <span class="text-xs px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-700 font-bold">Live Data</span>
+                        </div>
+                        <canvas id="overviewChart" class="max-h-64 w-full"></canvas>
+                    </div>
+                `;
+
+                setTimeout(() => {
+                    const ctx = document.getElementById('overviewChart');
+                    if (ctx) {
+                        new Chart(ctx, {
+                            type: 'line',
+                            data: {
+                                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                                datasets: [{
+                                    label: 'Academic Progress / System Activity Metric',
+                                    data: [75, 82, 80, 88, 92, 95],
+                                    borderColor: '#0284c7',
+                                    backgroundColor: 'rgba(2, 132, 199, 0.1)',
+                                    fill: true,
+                                    tension: 0.4
+                                }]
+                            },
+                            options: { responsive: true, maintainAspectRatio: false }
+                        });
+                    }
+                }, 100);
+
+            } else if (tabId === 'idcard') {
+                main.innerHTML = `
+                    <div class="flex flex-col items-center justify-center space-y-6 py-6">
+                        <h3 class="font-bold text-xl text-slate-800 dark:text-slate-100">Dynamic Security Digital ID Card</h3>
+                        <p class="text-xs text-slate-500">Hover or tap card to inspect dynamic security signature on back.</p>
+
+                        <div class="card-flip w-80 h-96 cursor-pointer">
+                            <div class="card-inner w-full h-full relative rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 bg-gradient-to-br from-slate-900 to-sky-950 text-white p-6 flex flex-col justify-between">
+                                <!-- Card Front -->
+                                <div class="card-front absolute inset-0 p-6 flex flex-col justify-between">
+                                    <div class="flex items-center justify-between">
+                                        <span class="font-black tracking-widest text-sm text-sky-400">AURA INSTITUTE</span>
+                                        <i class="fa-solid fa-wifi text-sky-400 text-sm"></i>
+                                    </div>
+                                    <div class="flex flex-col items-center text-center space-y-2">
+                                        <div class="w-20 h-20 rounded-full border-2 border-sky-400 p-1 bg-slate-800 flex items-center justify-center">
+                                            <i class="fa-solid fa-user-graduate text-3xl text-sky-400"></i>
+                                        </div>
+                                        <div>
+                                            <h4 class="font-bold text-lg">${data.name}</h4>
+                                            <p class="text-xs text-slate-400">${data.dept}</p>
+                                        </div>
+                                    </div>
+                                    <div class="border-t border-slate-800 pt-3 flex justify-between text-xs">
+                                        <div>
+                                            <span class="block text-slate-500 text-[10px]">ID NO</span>
+                                            <span class="font-mono font-bold">${data.id}</span>
+                                        </div>
+                                        <div class="text-right">
+                                            <span class="block text-slate-500 text-[10px]">VALID UNTIL</span>
+                                            <span class="font-mono font-bold">08/2028</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- Card Back -->
+                                <div class="card-back absolute inset-0 p-6 rounded-2xl bg-slate-900 flex flex-col justify-between text-center">
+                                    <p class="text-xs text-slate-400 font-semibold">Campus Dynamic Encrypted QR Verification</p>
+                                    <div class="bg-white p-3 rounded-xl mx-auto">
+                                        <i class="fa-solid fa-qrcode text-6xl text-slate-900"></i>
+                                    </div>
+                                    <p class="text-[10px] text-slate-500">Scanned at library, hostiles, gate, and labs for dynamic validation.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+            } else if (tabId === 'academics') {
+                main.innerHTML = `
+                    <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h3 class="font-bold text-lg text-slate-800 dark:text-slate-100">Curriculum Prerequisite Graph (DAG)</h3>
+                                <p class="text-xs text-slate-500">Interactive visual course dependency mapping.</p>
+                            </div>
+                            <span class="text-xs bg-sky-100 text-sky-700 px-3 py-1 rounded-full font-bold">Interactive DAG</span>
+                        </div>
+                        <div class="relative w-full h-80 bg-slate-900 rounded-xl overflow-hidden p-4">
+                            <canvas id="dagCanvas" class="w-full h-full"></canvas>
+                        </div>
+                    </div>
+                `;
+
+                setTimeout(() => {
+                    const canvas = document.getElementById('dagCanvas');
+                    if (canvas) {
+                        const ctx = canvas.getContext('2d');
+                        canvas.width = canvas.offsetWidth;
+                        canvas.height = canvas.offsetHeight;
+
+                        const nodes = [
+                            { id: 1, name: "Math I", x: 60, y: 150 },
+                            { id: 2, name: "Prog. Logic", x: 60, y: 230 },
+                            { id: 3, name: "Data Structures", x: 220, y: 230 },
+                            { id: 4, name: "Algorithms", x: 380, y: 230 },
+                            { id: 5, name: "Machine Learning", x: 540, y: 190 }
+                        ];
+
+                  
